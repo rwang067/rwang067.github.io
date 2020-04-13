@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Rui Wang&#39;s blog">
+    <meta name="keyword" content>
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        Wukong(OSDI 2016) 基于RDMA的分布式图搜索实现快速并发的RDF查询 - Rui&#39;s Blog
+        
+    </title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/aircloud.css">
+    <link rel="stylesheet" href="/css/gitment.css">
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> 热爱学习，热爱生活 </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar radius">
+            <img src="/img/avatar.jpg" />
+        </div>
+        <div class="name">
+            <i>Rui Wang</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archives">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#RDF图查询"><span class="toc-text">RDF图查询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#现有方法"><span class="toc-text">现有方法</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#三元组存储和三元组连接"><span class="toc-text">三元组存储和三元组连接</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#图存储和图探索"><span class="toc-text">图存储和图探索</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#RDMA及其特性"><span class="toc-text">RDMA及其特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Wukong-Overview"><span class="toc-text">Wukong Overview</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#基于图的RDF数据建模"><span class="toc-text">基于图的RDF数据建模</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#图模型和索引"><span class="toc-text">图模型和索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#差异化的图划分"><span class="toc-text">差异化的图划分</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#基于谓词的KV存储"><span class="toc-text">基于谓词的KV存储</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查询处理"><span class="toc-text">查询处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#基础的查询处理"><span class="toc-text">基础的查询处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Full-history剪枝"><span class="toc-text">Full-history剪枝</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#迁移执行或数据"><span class="toc-text">迁移执行或数据</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#并发查询处理"><span class="toc-text">并发查询处理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#系统实现"><span class="toc-text">系统实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实验"><span class="toc-text">实验</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#相关工作"><span class="toc-text">相关工作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#三元组和关系型存储上的RDF查询"><span class="toc-text">三元组和关系型存储上的RDF查询</span></a></li></ol></li></ol>
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+
+        <div class="index-about-mobile">
+            <i> 热爱学习，热爱生活 </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        Wukong(OSDI 2016) 基于RDMA的分布式图搜索实现快速并发的RDF查询
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2020-03-27 09:53:52</span></span>
+        
+        <span class="attr">标签：/
+        
+        <a class="tag" href="/tags/#paper reading" title="paper reading">paper reading</a>
+        <span>/</span>
+        
+        <a class="tag" href="/tags/#RDF query" title="RDF query">RDF query</a>
+        <span>/</span>
+        
+        <a class="tag" href="/tags/#KV graph storage" title="KV graph storage">KV graph storage</a>
+        <span>/</span>
+        
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <p>Wukong:Fast and Concurrent RDF Queries with RDMA-based Distributed Graph Exploration, Jiaxin Shi, Youyang Yao, Rong Chen, Haibo Chen, OSDI16 | <a href="https://www.usenix.org/sites/default/files/conference/protected-files/osdi16_slides_shi.pdf" target="_blank" rel="noopener">paper</a> | <a href="https://www.usenix.org/system/files/conference/osdi16/osdi16-shi.pdf" target="_blank" rel="noopener">presentation</a> |</p>
+<h3 id="RDF图查询"><a href="#RDF图查询" class="headerlink" title="RDF图查询"></a>RDF图查询</h3><ul>
+<li><p><strong>RDF简介</strong>：Resource Description Framework，资源描述框架，是一种描述web资源特性及资源之间关系的模型框架。很多现实世界的数据集都使用RDF格式来表述，例如谷歌的知识图谱和一些公共知识库，包括DBpedia、Probase、PubChemRDF和Bio2RDF等。</p>
+</li>
+<li><p><strong>RDF图表示</strong>：RDF将数据集表示为一组<strong>⟨Subject, Predicate, Object⟩</strong>三元组的集合，这些三元组的集合可以构成一个带标记的有向图。下图是根据LUBM数据集简化的一个RDF图的示例。</p>
+</li>
+</ul>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/RDF.png">
+</div>
+
+<ul>
+<li><strong>SPARQL</strong>：支持对RDF数据集的在线查询。最常见的SPARQL查询类型如下，其中，RD（result description）表示结果描述，GP（triple patterns）表示三元组模式。</li>
+</ul>
+<div align="center" width="80%">
+  Q := SELECT $RD$ WHERE $GP$
+</div>
+
+<p>下图展示了在上面的例题上的两个查询的例子：</p>
+<ul>
+<li>Q1：查询X-Lab实验室的教授所教授的课程；</li>
+<li>Q2：查询参加了他的导师所教授的课程的同学及其导师和该课程。</li>
+</ul>
+<div align="center" width="80%">
+  <img width="350" src="/img/wukong/Q1.png">
+  <img width="350" src="/img/wukong/Q2.png">
+</div>
+
+<ul>
+<li><p><strong>RDF查询与图分析的区别</strong>：（1）RDF查询是以用户为中心的，因此，最小化往返延迟比最大化网络吞吐量更重要；（2）RDF查询只涉及图的一小部分，而不处理整个图，因此不值得将所有资源都用于运行单个查询。（3）图分析通常以批处理的方式完成，而RDF查询通常并发地处理多个RDF查询。</p>
+</li>
+<li><p><strong>RDF图查询的挑战</strong>：RDF数据集的规模在不断增大、RDF查询中每秒的查询数量也在增多，这就要求RDF存储在高并发查询上提供低延迟和高吞吐量。</p>
+</li>
+</ul>
+<h3 id="现有方法"><a href="#现有方法" class="headerlink" title="现有方法"></a>现有方法</h3><h4 id="三元组存储和三元组连接"><a href="#三元组存储和三元组连接" class="headerlink" title="三元组存储和三元组连接"></a>三元组存储和三元组连接</h4><p>大多数现有的系统将RDF数据作为<strong>一组三元组</strong>存储并索引到<strong>关系型数据库</strong>中，并且利用三元组<strong>连接操作</strong>来处理SPARQL查询。</p>
+<p><strong>三元组存储方式的查询处理</strong>，包括两个阶段：</p>
+<ul>
+<li><p><strong>（1）扫描（ Scan）阶段</strong>：RDF引擎将一个SPARQL查询分解为一组三元组模式的集合。对于的查询Q1，分解得到的三元组模式有{?X memberOf X-Lab}, {?X type Professor} 和 {?X teacherOf ?Y}。对于每个三元组模式，扫描存储的三元组集合，生成一个临时的查询表。</p>
+</li>
+<li><p><strong>（2）连接（ Join）阶段</strong>：将各个三元组模式生成的查询表连接起来以产生最终的查询结果。</p>
+</li>
+</ul>
+<p><strong>三元组存储方式的局限性</strong>：</p>
+<ul>
+<li><p>（1）三元组存储方式过分地依赖昂贵的连接操作，尤其是分布式场景下的<em>合并/哈希连接</em>，时间开销非常大。</p>
+</li>
+<li><p>（2）扫描再连接的方法会产生大量冗余的中间结果。</p>
+</li>
+<li><p>（3）使用冗余的6个主要的SPO置换索引可以加速扫描操作，但这样的索引会导致沉重的内存压力。</p>
+</li>
+</ul>
+<h4 id="图存储和图探索"><a href="#图存储和图探索" class="headerlink" title="图存储和图探索"></a>图存储和图探索</h4><p><strong>图存储方式的查询处理</strong>：</p>
+<p>Trinity.RDF[VLDB’08]将RDF数据存储在分布式内存KV存储系统上的图模型中，并利用快速图探索策略进行查询处理。它进一步采用<strong>一步修剪法</strong>(即根据上一步的约束条件)来减少中间结果。例如Q1中，首先探索XLab实验室的教授，发现X只可能是Erik和Logan，所以将XLab实验室的其他成员都修剪掉。</p>
+<p><strong>图存储方式的局限性</strong>：</p>
+<p>Trinity.RDF经常会<strong>依赖最终的集中连接来过滤不匹配的结果</strong>。比如对于查询Q2，需要查询参加了他的导师所教授的课程的同学及其导师和该课程，在图探索阶段分别探索了三个三元组模式后，需要一个最终的连接操作来过滤掉不匹配的结果项，即Logan to OS, OS tc Raven 和 Raven ad Erik。先前的工作表明最终的连接是一个潜在的瓶颈，特别是对于具有循环或大型中间结果的查询。</p>
+<h3 id="RDMA及其特性"><a href="#RDMA及其特性" class="headerlink" title="RDMA及其特性"></a>RDMA及其特性</h3><p><strong>RDMA</strong>，即Remote Direct Memory Access，远程直接内存访问，是一种跨节点内存访问技术，由于完全绕过了目标节点的OS内核和/或CPU，因此具有低延迟和低CPU开销。</p>
+<p><strong>RDMA的操作</strong>：RDMA既提供了 SEND/RECV 双边消息传递接口，也提供了READ、 WRITE单边操作和两个原子操作——(fetch-and-add 和 compare-and swap。之前的工作指出，单边操作通常比双边操作破坏性更小，因为它不涉及目标机器的CPU。为了最小化查询处理过程中多台机器之间的干扰，我们将重点放在RDMA的单边操作上。但是，对Wukong来说，使用双边RDMA操作应该也很简单。</p>
+<p><strong>RDMA与不同通讯模块的对比</strong>：下图展示了单边的RDMA与IPoIB (IP over InfiniBand)或10GbE（万兆网）上的TCP/IP在不同payload sizes的配置下throughput（吞吐量）和roundtrip latencies（往返延迟）这两个指标的对比。</p>
+<div align="center" width="80%">
+  <img width="500" src="/img/wukong/RDMA.png">
+</div>
+
+<ul>
+<li><p>对所有的payload size的场景，RDMA总是实现最高的吞吐量和最低的往返延迟。</p>
+</li>
+<li><p>随着payload size的增加，IPoIB和10GbE上的吞吐量逐渐接近单边RDMA的性能。</p>
+</li>
+<li><p>往返延迟方面，单边RDMA总是能实现一个数量级的性能提升。因此，非常有必要利用单边的RDMA来加速面向延迟的查询处理。</p>
+</li>
+<li><p>延迟相对不受payload size的影响，因为较小的请求无法使高带宽网卡饱和。</p>
+</li>
+</ul>
+<h3 id="Wukong-Overview"><a href="#Wukong-Overview" class="headerlink" title="Wukong Overview"></a>Wukong Overview</h3><ul>
+<li><p><strong>场景设置</strong>：在一个由具有RDMA特性高速低延迟网络相连的集群上，进行对大规模RDF数据集的大量并发SPARQL查询。Wukong将RDF图划分成多个分片分布到各个机器上，为了使各个机器上能包含一个独立的子图，Wukong在划分的过程中会复制一些边；另外，Wukong创造了一些索引节点来辅助查询；在每台机器上，Wukong使用一个工作线程模型，在$n$个核上运行$n$个工作线程，每个工作线程一次执行处理一个查询请求。</p>
+</li>
+<li><p><strong>系统架构</strong>：Wukong的系统架构如下图所示。Wukong在服务器端采用去中心化的模型，每台机器都可以直接为客户端提供服务。每个客户端都包含一个客户端库，该库将SPARQL查询解析为一组存储过程，这些存储过程被发送到服务器端来处理请求。或者，Wukong也可以使用专用的代理来运行客户端库并且均衡来自各个客户端的请求。一些复杂的机制比如拥塞控制和负载均衡等也可以在代理上实现（这就在本文的范围之外了）。另外，为了避免发送和存储长字符串，以节省网络带宽和内存消耗，每个字符串被字符串服务器转换成一个唯一的ID（与之前的工作类似）。</p>
+</li>
+</ul>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/architecture.png">
+</div>
+
+<p>每个服务器包含两层：查询引擎层和图存储层。<strong>查询引擎层</strong>为每个核绑定一个工作线程和一个逻辑的任务队列，用以持续地处理来自客户端或其他服务器的查询请求。<strong>图存储层</strong>在分布式哈希表上采用RDMA友好的KV存储来支持一个划分了的全局地址空间。每个机器存储了RDF图的一部分，并被该机器上的所有工作线程共享。</p>
+<ul>
+<li><strong>查询处理</strong>：Wukong提供对来自客户端的多个并发查询请求进行低延迟的响应。客户端或者代理根据请求类型决定首先将查询请求发送到哪台服务器。对于开始于一个常量节点的查询请求，Wukong将该查询请求发送到包含该节点的服务器；对于开始于一个特定类型或谓词的节点集，Wukong将请求发送到对应索引顶点的所有副本。</li>
+</ul>
+<p>和其他系统一样，Wukong将一个查询解析为一个操作树，每个查询可能被表示为一个<strong>子查询链</strong>。每个机器处理一个子查询，然后在必要时将剩余的子查询分派给其他机器。子查询将被推入任务队列，以异步方式进行调度和执行。</p>
+<h3 id="基于图的RDF数据建模"><a href="#基于图的RDF数据建模" class="headerlink" title="基于图的RDF数据建模"></a>基于图的RDF数据建模</h3><h4 id="图模型和索引"><a href="#图模型和索引" class="headerlink" title="图模型和索引"></a>图模型和索引</h4><p>Wukong使用一个有向图来建模表示和存储RDF数据，图中的每个顶点对应于一个RDF三元组中的实体—— (subject or object)，每条边被标记为一个谓词（predicate），并由subject指向object。</p>
+<p>考虑到SPARQL查询可能依赖于检索一组由带有某些谓词的边连接的subject/object顶点集合，Wukong提供了两种<strong>索引节点</strong>来协助这种查询，如下图所示。为了避免混淆，我们使用<strong>普通顶点</strong>来指代subject/object顶点。</p>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/index_vertex.png">
+</div>
+
+<p>对于带有某个特定谓词的查询模式，比如Q2中的{?Y teacherOf ?Z}，Wukong提出使用<strong>谓词索引(P-idx)</strong>来分别维护使用特定谓词的入边和出边标记的所有subject和object。例如，上图(a)中，一个谓词索引<em>teacherOf(to)</em>链接到所有入边(DS和OS)或出边(Erik和Logan)包含了to标签的普通顶点。这对应于三元组存储方法中的PSO和POS索引。</p>
+<p>某些查询中使用特殊谓词类型(ty)将属于某一类型的顶点分组，比如Q2中的{?X type Prof}，Wukong将此类谓词的object视为<strong>类型索引(T-idx)</strong>。例如，上图(b)中的类型索引<em>Prof</em>维护所有教授类型的普通顶点。</p>
+<p>Wukong将索引顶点视为RDF图的基本部分，并将这些索引节点考虑到图的划分和存储当中。这样做有两点好处：1）使用图探索进行查询的过程变得简单，因为可以直接从一个索引节点开始探索；2）可以高效地将这些索引节点分布到多个服务器上。</p>
+<h4 id="差异化的图划分"><a href="#差异化的图划分" class="headerlink" title="差异化的图划分"></a>差异化的图划分</h4><p>支持分布式查询的一个关键步骤就是划分图到多个机器上，同时仍然保持良好的访问局部性和支持并行性。复杂查询通常通过某个谓词或类型涉及大量的顶点，这些谓词或类型应该在多台机器上执行，以利用并行性。</p>
+<p>受PowerLyra[EuroSys15]的启发，Wukong对普通顶点和索引顶点采用了不同的划分算法。</p>
+<p><strong>PowerLyra</strong>：</p>
+<ul>
+<li><p>1）高度节点 ： 拆分成多个节点，分别存放于不同机器；</p>
+</li>
+<li><p>2）低度节点 ： 分布存储到不同机器</p>
+</li>
+</ul>
+<p><strong>Wukong</strong>：</p>
+<ul>
+<li><p>1）index vertices : 拆分；</p>
+</li>
+<li><p>2）normal vertices ： 分布；</p>
+</li>
+<li><p>3）在RDF场景下，高度节点的不均匀，并不会很大的影响负载均衡，因为一个RDF查询通常通过某种类型或谓词，只访问一个顶点的一部分邻居顶点。</p>
+</li>
+</ul>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/partition.png">
+</div>
+
+
+<h4 id="基于谓词的KV存储"><a href="#基于谓词的KV存储" class="headerlink" title="基于谓词的KV存储"></a>基于谓词的KV存储</h4><p>与Trinity.RDF[PVLDB’13]类似，Wukong使用一个分布式的KV存储来存储RDF图。</p>
+<p><strong>Trinity.RDF</strong>：</p>
+<ul>
+<li><p>Key：vertex ID (vid)</p>
+</li>
+<li><p>Value：入边和出边列表（其中列表的每一项是&lt;谓词，vid&gt;对）</p>
+</li>
+</ul>
+<p>通常，一个SPARQL查询关心的仅仅是一个顶点的满足特定谓词（或类型）的部分邻居顶点。因此，如果在Key中不包含<em>谓词（或类型）</em>和<em>方向</em>信息，会带来大量没有必要的计算开销和网络传输开销。</p>
+<p><strong>Wukong</strong>采用一种更细粒度的顶点分解和KV结构设计，在Key中加入谓词（或类型）和方向：</p>
+<ul>
+<li><p>Key：”vid, p/tid, d”</p>
+</li>
+<li><p>Value：邻居节点ID列表 或 谓词（类型）ID列表</p>
+</li>
+</ul>
+<p>这种细粒度的顶点分解方式能够减少大量的计算和网络开销，还可以构建本地谓词索引，这可以对应于三元组存储方法中的PSO和POS索引。</p>
+<p>为了统一存储普通顶点和索引顶点，并采用不同的分区策略，Wukong将顶点ID (vid)和谓词/类型ID (p/tid)的ID映射分离开来。vid的ID 0保留给索引顶点，而p/tid的ID 0和1分别保留给谓词和类型索引。下图展示了示例图中的部分图结构的存储方式。</p>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/kv_store.png">
+</div>
+
+<p>需要根据Key中<em>p/tid</em>的取值来判断对应的Value的意义：</p>
+<ul>
+<li>1）如果<em>p/tid=0</em>，则对应的Value为一个谓词ID列表；</li>
+<li>2）如果<em>p/tid=1</em>，则对应的Value为一个节点类型ID列表；</li>
+<li>3）否则，对应的Value为一个普通顶点的连接到具有特定谓词(p/tid)的普通邻居节点ID列表；</li>
+</ul>
+<p>由于Wukong的目标是利用RDMA这样的高级网络特性来提升查询性能，Wukong将它的图存储层构建在一个从DrTM-KV[48]派生而来的<em>RDMA友好的分布式哈希表</em>上，因此它具有<em>RDMA友好的集群哈希</em>和<em>基于位置的缓存</em>等特性。另外，由于Wukong针对的是查询处理的场景，因此它删除了不必要的一致性检测和支持事务的元数据信息，来简化KV存储设计。</p>
+<h3 id="查询处理"><a href="#查询处理" class="headerlink" title="查询处理"></a>查询处理</h3><h4 id="基础的查询处理"><a href="#基础的查询处理" class="headerlink" title="基础的查询处理"></a>基础的查询处理</h4><h4 id="Full-history剪枝"><a href="#Full-history剪枝" class="headerlink" title="Full-history剪枝"></a>Full-history剪枝</h4><div align="center" width="80%">
+  <img width="400" src="/img/wukong/full_history.png">
+</div>
+
+<h4 id="迁移执行或数据"><a href="#迁移执行或数据" class="headerlink" title="迁移执行或数据"></a>迁移执行或数据</h4><div align="center" width="80%">
+  <img width="400" src="/img/wukong/migration.png">
+</div>
+
+<h4 id="并发查询处理"><a href="#并发查询处理" class="headerlink" title="并发查询处理"></a>并发查询处理</h4><h3 id="系统实现"><a href="#系统实现" class="headerlink" title="系统实现"></a>系统实现</h3><p>系统实现：约6000行C++代码。</p>
+<ul>
+<li><strong>任务队列</strong>：Wukong将每个核上的一个工作线程与一个逻辑私有任务队列绑定在一起，客户端和其他服务器上的工作线程向这个任务队列提交(子)查询。Wukong利用单边RDMA操作来加速工作线程之间的通信（客户端仍然可以使用一般的互连来连接服务器）。</li>
+</ul>
+<p>Wukong中的每个线程的逻辑队列由<strong>一个客户端队列(Client-Q)</strong>和<strong>多个服务器队列(Server-Q)</strong>组成。对于客户端队列，Wukong遵循传统的并发队列来服务来自多个客户端的查询。但是由于单边RDMA操作缺乏可表达性，实现基于RDMA的并发队列可能会产生较大的开销。相反，为每个远程机器的每个工作线程使用单独的任务队列可能会成倍地增加队列的数量。幸运的是，我们发现不需要允许远程机器上的所有工作线程将查询发送给所有本地工作线程。为了解决这个问题，Wukong只提供了不同机器上的工作线程之间的一对一映射，如下图所示。这不仅可以避免任务队列的突发，还可以避免复杂的并发机制。</p>
+<div align="center" width="80%">
+  <img width="300" src="/img/wukong/task_queue.png">
+</div>
+
+<ul>
+<li><p><strong>发布查询</strong>：</p>
+</li>
+<li><p><strong>多线程</strong>：</p>
+</li>
+<li><p><strong>动态增长图</strong>：大多数以前的RDF存储只支持只读查询，Wukong也提供了对增量更新图的并发查询的初步支持。新的三元组将定期被纳入RDF存储，所有查询运行在一个一致的快照上。下图展示了Wukong用来支持动态图的三个扩展。</p>
+</li>
+</ul>
+<div align="center" width="80%">
+  <img width="400" src="/img/wukong/evolving_graph.png">
+</div>
+
+<p>（1）RDF存储：为了支持Value的动态增长，Wukong提供了一个<strong>伙伴内存分配器</strong>。当Value的存储空间满了，分配器会找到一个两倍的空闲空间，将旧Value的所有数据拷贝到新的Value的空间，然后使用原子指令替换Key的指针。此外，要为上述查询提供一致的快照，应该使用两个版本的Value(v0和v1)对每个Key进行扩展，这两个版本由其快照号和Value中的偏移量组成。</p>
+<p>（2）查询处理：在每台机器上都有两个全局计数器(cnt_v0和cnt_v1)，用来记录两个最新快照上未完成查询的数量和一个当前<strong>快照号(csn)</strong>。每个查询将首先读取当前快照号，并在执行之前和之后主动增加和减少相应的计数器。查询的快照号将用于获取所有Value的一致版本，并由其所有子查询继承。</p>
+<p>（3）RDF数据注入：图中新增的RDF三元组会被注入到所有服务器，Wukong通过执行以下步骤来进行注入：</p>
+<ul>
+<li><p>所有新增的三元组被增加到后台，并对并发的查询操作不可见，该操作由一个<strong>注入主服务器(IM)</strong>协调。</p>
+</li>
+<li><p>与此同时，所有旧快照上未完成的查询需要完成执行。</p>
+</li>
+<li><p>之后，所有服务器用新Value安全的覆盖旧Value，并通知IM。</p>
+</li>
+<li><p>最终，IM将要求所有服务器完成新快照的注入，即自动增加当前快照号(csn)和更新全局计数器(cnt_v0和cnt_v1)。</p>
+</li>
+</ul>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p><strong>（1）实验设置</strong></p>
+<p>实验环境：6个支持RDMA的结点的机架级集群，每个机器有2个10核Intel Xeon E5-2650 v3处理器，64GB的DRAM。每台机器都配备了两个通过PCIe 3.0 x8连接到Mellanox IS5025 40Gbps IB交换机的ConnectX-3 MCX353A InfiniBand NIC，以及一个连接到Force10 S4810P 10GbE交换机的Intel X520 10GbE NIC。所有机器运行使用Mellanox OFED v3.0-2.0.1栈的Ubuntu 14.04。</p>
+<p>数据集：LUBM-10240（1410M个三元这样），WSDTS，DBPSB，YAGO2。</p>
+<p>对比系统：1）中心化的系统：RDF-3X、 BitMat。2）分布式系统：TriAD、 Trinity.RDF、 SHARD。</p>
+<p>评估方法：throughput、latency</p>
+<p><strong>（2）延迟 &amp; 吞吐量</strong></p>
+<p>Wukong可以在6台机器上实现每秒269K的查询，平均延迟为0.80毫秒。</p>
+<p><strong>（3）吞吐量</strong></p>
+<h3 id="相关工作"><a href="#相关工作" class="headerlink" title="相关工作"></a>相关工作</h3><h4 id="三元组和关系型存储上的RDF查询"><a href="#三元组和关系型存储上的RDF查询" class="headerlink" title="三元组和关系型存储上的RDF查询"></a>三元组和关系型存储上的RDF查询</h4>
+        
+            <div class="donate-container">
+    <div class="donate-button">
+        <button id="donate-button">赞赏</button>
+    </div>
+    <div class="donate-img-container hide" id="donate-img-container">
+        <img id="donate-img" src="" data-src="/img/donate.jpg">
+        <p> 感谢鼓励 </p>
+    </div>
+</div>
+        
+        <br />
+        <div id="comment-container">
+        </div>
+        <div id="disqus_thread"></div>
+
+        <div id="lv-container">
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+
+        
+        <li>
+            <a target="_blank"  href="mailto:wangrui1994@126.com">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-linkedin"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+        
+
+        
+        <li>
+            <a target="_blank" href="http://weibo.com/3125304081">
+                            <span class="fa-stack fa-lg">
+                                  <i class="iconfont icon-weibo"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+        
+        <li>
+            <a target="_blank"  href="https://github.com/rwang067">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-github"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span>/</span>
+        
+        <span><a href="https://rwang067.github.io/">Rui&#39;s Blog</a></span>
+        <span>/</span>
+        
+        <span><a href="http://home.ustc.edu.cn/~rwang067/">Rui&#39;s Page</a></span>
+        <span>/</span>
+        
+        <span><a href="http://niexiaotao.cn/">AirCloud&#39;s Blog</a></span>
+        <span>/</span>
+        
+    </p>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a href="https://hexo.io/">Hexo</a>  Theme <a href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<!-- <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="/js/index.js"></script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/gitment.js"></script>
+<script>
+    var gitment = new Gitment({
+        id: 'Wukong(OSDI 2016) 基于RDMA的分布式图搜索实现快速并发的RDF查询',
+        owner: 'rwang067',
+        repo: 'rwang067.github.io',
+        oauth: {
+            client_id: '366668f038aaa3679510',
+            client_secret: 'c30b890b606327a4b145e1b0c801698ec724460e',
+        },
+    })
+    gitment.render('comment-container')
+</script>
+
+
+
+
+</html>
