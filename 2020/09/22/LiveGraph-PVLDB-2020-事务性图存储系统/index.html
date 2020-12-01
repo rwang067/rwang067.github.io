@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google-site-verification" content="xBT4GhYoi5qRD5tr338pgPM5OWHHIDR6mNg1a3euekI">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Rui Wang&#39;s blog">
+    <meta name="keyword" content>
+    <link rel="shortcut icon" href="/img/favicon.ico">
+
+    <title>
+        
+        LiveGraph(PVLDB 2020) 事务性图存储系统 - Rui&#39;s Blog
+        
+    </title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/aircloud.css">
+    <link rel="stylesheet" href="/css/gitment.css">
+    <!--<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">-->
+    <link href="//at.alicdn.com/t/font_620856_pl6z7sid89qkt9.css" rel="stylesheet" type="text/css">
+    <!-- ga & ba script hoook -->
+    <script></script>
+</head>
+
+<body>
+
+<div class="site-nav-toggle" id="site-nav-toggle">
+    <button>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+        <span class="btn-bar"></span>
+    </button>
+</div>
+
+<div class="index-about">
+    <i> 热爱学习，热爱生活 </i>
+</div>
+
+<div class="index-container">
+    
+    <div class="index-left">
+        
+<div class="nav" id="nav">
+    <div class="avatar-name">
+        <div class="avatar radius">
+            <img src="/img/avatar.jpg" />
+        </div>
+        <div class="name">
+            <i>Rui Wang</i>
+        </div>
+    </div>
+    <div class="contents" id="nav-content">
+        <ul>
+            <li >
+                <a href="/">
+                    <i class="iconfont icon-shouye1"></i>
+                    <span>主页</span>
+                </a>
+            </li>
+            <li >
+                <a href="/tags">
+                    <i class="iconfont icon-biaoqian1"></i>
+                    <span>标签</span>
+                </a>
+            </li>
+            <li >
+                <a href="/archives">
+                    <i class="iconfont icon-guidang2"></i>
+                    <span>存档</span>
+                </a>
+            </li>
+            <li >
+                <a href="/about/">
+                    <i class="iconfont icon-guanyu2"></i>
+                    <span>关于</span>
+                </a>
+            </li>
+            
+            <li>
+                <a id="search">
+                    <i class="iconfont icon-sousuo1"></i>
+                    <span>搜索</span>
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+        <div id="toc" class="toc-article">
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#图数据处理"><span class="toc-text">图数据处理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#图数据管理"><span class="toc-text">图数据管理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#事务性图数据管理"><span class="toc-text">事务性图数据管理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#图分析"><span class="toc-text">图分析</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#研究现状"><span class="toc-text">研究现状</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#出发点"><span class="toc-text">出发点</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#顺序边存储的优势"><span class="toc-text">顺序边存储的优势</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#顺序访问的事务"><span class="toc-text">顺序访问的事务</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LiveGraph"><span class="toc-text">LiveGraph</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#数据布局"><span class="toc-text">数据布局</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#顶点块"><span class="toc-text">顶点块</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#TEL"><span class="toc-text">TEL</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#单线程操作"><span class="toc-text">单线程操作</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#节点操作"><span class="toc-text">节点操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#顺序邻接表扫描"><span class="toc-text">顺序邻接表扫描</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#边更新和常量时间插入"><span class="toc-text">边更新和常量时间插入</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#读单个边"><span class="toc-text">读单个边</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#事务处理"><span class="toc-text">事务处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#存储管理"><span class="toc-text">存储管理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Compaction"><span class="toc-text">Compaction</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#时间戳的空间开销"><span class="toc-text">时间戳的空间开销</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#内存管理"><span class="toc-text">内存管理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#恢复机制"><span class="toc-text">恢复机制</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Evaluation"><span class="toc-text">Evaluation</span></a></li></ol>
+</div>
+    
+</div>
+
+
+<div class="search-field" id="search-field">
+    <div class="search-container">
+        <div class="search-input">
+            <span id="esc-search"> <i class="icon-fanhui iconfont"></i></span>
+            <input id="search-input"/>
+            <span id="begin-search">搜索</span>
+        </div>
+        <div class="search-result-container" id="search-result-container">
+
+        </div>
+    </div>
+</div>
+
+        <div class="index-about-mobile">
+            <i> 热爱学习，热爱生活 </i>
+        </div>
+    </div>
+    
+    <div class="index-middle">
+        <!-- Main Content -->
+        
+
+
+<div class="post-container">
+    <div class="post-title">
+        LiveGraph(PVLDB 2020) 事务性图存储系统
+    </div>
+
+    <div class="post-meta">
+        <span class="attr">发布于：<span>2020-09-22 15:19:50</span></span>
+        
+        <span class="attr">标签：/
+        
+        <a class="tag" href="/tags/#graph processing system" title="graph processing system">graph processing system</a>
+        <span>/</span>
+        
+        <a class="tag" href="/tags/#paper reading" title="paper reading">paper reading</a>
+        <span>/</span>
+        
+        <a class="tag" href="/tags/#dynamic graphs" title="dynamic graphs">dynamic graphs</a>
+        <span>/</span>
+        
+        <a class="tag" href="/tags/#graph database" title="graph database">graph database</a>
+        <span>/</span>
+        
+        
+        </span>
+        <span class="attr">访问：<span id="busuanzi_value_page_pv"></span>
+</span>
+</span>
+    </div>
+    <div class="post-content ">
+        <p>Livegraph: A transactional graph storage system with purely sequential adjacency list scans, PVLDB, 2020. | <a href="https://dl.acm.org/doi/pdf/10.14778/3384345.3384351" target="_blank" rel="noopener">Paper</a> |</p>
+<h3 id="图数据处理"><a href="#图数据处理" class="headerlink" title="图数据处理"></a>图数据处理</h3><h4 id="图数据管理"><a href="#图数据管理" class="headerlink" title="图数据管理"></a>图数据管理</h4><p>图数据是数据管理中增长最快的领域之一，执行图处理和图数据管理的应用程序预计到2022年将每年翻一番，而且使用图数据的应用程序非常多样化。现有的图数据管理方式大致可以分为两类：<strong>事务性图数据管理</strong>和<strong>图分析</strong>。</p>
+<h4 id="事务性图数据管理"><a href="#事务性图数据管理" class="headerlink" title="事务性图数据管理"></a>事务性图数据管理</h4><p>事务性图数据管理类型的工作负载通常需要持续更新和查询单个顶点、边和邻接表。例如，Facebook 以图的形式存储帖子、好友关系、评论和其他关键数据。写入事务递增地更新图，而读取事务则本地化为边、顶点或单个顶点的邻域。这些应用程序要求图存储系统具有非常低的延迟和高吞吐量，无论是键值存储、关系数据库管理系统还是专门的图数据库系统。而且，系统还必须具有典型的事务特性：处理并发更新的并发控制和持久化更新的持久性。</p>
+<h4 id="图分析"><a href="#图分析" class="headerlink" title="图分析"></a>图分析</h4><p>图分析任务通常在一致的只读图快照上运行，其性能高度依赖于对顶点邻域（即顶点的邻接表）的有效扫描。</p>
+<p>近年来，对动态图数据的实时分析正变得越来越重要。例如，推荐网站需要根据用户的属性和最近的互动，来找到相关的产品和联系，因为这些都反映了用户的兴趣。还有其他一些应用程序，包括隐私相关数据治理（“过期”数据需要被排除在分析GDPR合规性之外）、金融（金融机构通过共同地址、电话号码或经常联系的人来确定是否在进行欺诈交易），或系统安全（监测系统检测到攻击者是否有执行一系列相关措施渗透系统）等。</p>
+<h4 id="研究现状"><a href="#研究现状" class="headerlink" title="研究现状"></a>研究现状</h4><p>同时支持事务性和（实时）分析工作负载的图存储系统越来越有吸引力。不幸的是，这两个世界分别采用的通用数据结构在进入陌生领域时效果并不好。</p>
+<p>在最先进的一些数据库管理系统和键值存储中使用的数据结构不支持良好的邻接表扫描（这是图分析和图数据库查询中的一项关键操作）。具体地说，一些流行的结构比如如 B+ 树和 LSM-Tree, 在图分析方面，产生的性能明显比图感知数据结构，比如压缩稀疏行（CSR）差。实验评测表明，邻接表在内存中的连续存储不仅提高了缓存效率，而且允许更好的猜测和预取，降低了内存访问成本和执行的指令数量。</p>
+<p>另一方面，分析图引擎经常使用顺序内存布局邻接表来存储图数据，比如 CSR。它们具有高效扫描的特性，但不支持高吞吐量、低延迟的并发事务处理。实际上，大多数现有的图引擎根本不以动态图为目标。添加并发控制来处理并发更新并不简单。并发控制算法在每个操作的关键路径上，直接影响邻接表扫描的性能。它不应该干扰随机访问或复杂执行流的顺序扫描。最近有很多工作是关于内存中的并发控制和关系数据的事务支持，但是现有的研究都没有专门针对图数据的独特需求来进行优化设计。</p>
+<h3 id="出发点"><a href="#出发点" class="headerlink" title="出发点"></a>出发点</h3><p>关键的设计选择：<strong>完全的顺序边扫描</strong>，即数据的访问是绝对的顺序扫描，不包含任何随机访问。在介绍 LiveGraph 的细节之前，先介绍一下为什么完全的顺序邻接表扫描是重要的。我们使用单线程 benchmark 测试和微架构分析来比较不同的常用数据结构，并量化顺序内存布局的优势。然后，我们讨论了并发控制算法如何以随机访问和分支的形式引入额外的复杂性。</p>
+<h4 id="顺序边存储的优势"><a href="#顺序边存储的优势" class="headerlink" title="顺序边存储的优势"></a>顺序边存储的优势</h4><p>邻接表包含图中的关键拓扑信息。从简单查询到全图分析，对这些列表的全部或部分扫描是图工作负载中的基本操作。图存储必须平衡<strong>快速扫描</strong>和<strong>高效的边插入</strong>。下面比较用于图存储的不同数据结构的扫描性能。</p>
+<p><strong>CSR</strong> 图存储格式包含两个数组,第一个将所有顶点的邻接表存储为目的地顶点序列ID，第二个存储指针指向第一个数组，由源顶点索引ID。CSR 存储格式非常紧凑，导致存储占用空间小，减少了内存的交通和提高缓存效率。而且，与大多数其他数据结构不同，它支持纯顺序邻接表扫描。这些属性使它成为以<strong>只读分析工作负载</strong>为目标的图引擎的首选。另一方面，它是不可变的，这使得它<strong>不适合用于动态图或事务性工作负载的场景</strong>。</p>
+<p><strong>链表</strong>是邻接表的直观选择，它被 Neo4j 所使用，Neo4j 是一种流行的事务性图形数据库。它很容易支持图中的边插入。但是在遍历链表指针时会遇到<strong>随机访问</strong>问题。</p>
+<p>其他一些最新的图存储采用通用数据结构，如 <strong>B+ 树</strong>和 <strong>LSM-Tree</strong> (LogStructured Merge Tree)。此时，邻接表就表示为一个排序的<strong>边集合</strong>，其唯一键是一个 (src,desti&gt;) 顶点 ID 对。</p>
+<p>这项工作提出了一种新的数据结构，即<strong>事务性边日志（TEL）</strong>，它同时允许<strong>顺序的邻接表扫描</strong>和<strong>快速的边插入</strong>。与现有图系统中使用的结构不同，它的特点是纯顺序但可变的边存储。TEL 将同一个邻接表中的边顺序地存储在尾部有空槽的连续块中，边的插入和更新被附加到块的尾部，直到它被填满，此时TEL被升级为更大的块。像 CSR 一样，TEL 有完全顺序的邻接表扫描。</p>
+<p>下表比较了上述数据结构的主要操作复杂度。每个邻接表扫描由一次查找操作组成，查找邻接表的第一个边，然后进行一次边扫描，进行一系列的边访问。注意，初始 seek 定位开销通常不能平摊，特别是考虑到大多数现实世界的图呈现出幂律度分布，大多数顶点只有很少的边。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Cost</th>
+<th style="text-align:left">Seek</th>
+<th style="text-align:center">Scan (per edge)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B+ Tree</td>
+<td style="text-align:left">O(log N)</td>
+<td style="text-align:center">random sequential w. random</td>
+</tr>
+<tr>
+<td>LSMT</td>
+<td style="text-align:left">O(log N)</td>
+<td style="text-align:center">random sequential w. random</td>
+</tr>
+<tr>
+<td>Linked List</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:center">random random</td>
+</tr>
+<tr>
+<td>CSR</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:center">random sequential</td>
+</tr>
+<tr>
+<td>TEL</td>
+<td style="text-align:left">O(1)</td>
+<td style="text-align:center">random sequential</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>实验对比上述几种数据结构的第一条边的定位开销和边访问开销</strong></p>
+<div align="center" width="80%">
+  <img width="400" src="/img/livegraph/micro-benchmark.png">
+</div>
+
+<h4 id="顺序访问的事务"><a href="#顺序访问的事务" class="headerlink" title="顺序访问的事务"></a>顺序访问的事务</h4><h3 id="LiveGraph"><a href="#LiveGraph" class="headerlink" title="LiveGraph"></a>LiveGraph</h3><h4 id="数据布局"><a href="#数据布局" class="headerlink" title="数据布局"></a>数据布局</h4><p>LiveGraph 在单个服务器上实现内存内和核外图存储。它采用属性图模型，其中每个对象（顶点或边）都可以有关联的属性（即任意键值对）。</p>
+<p>边存储是特别关键的，因为(1)通常图的边比顶点多，并且边操作更加频繁，(2)高效的边扫描是至关重要的，如前面所示。因此，LiveGraph 采用了一种 2-D 的方法：顶点是单独存储的，而所有发生在同一顶点上的边都集中在一个单一的顶点中事务性边日志（TEL）。</p>
+<p>下图显示了 LiveGraph 的数据结构，它主要由顶点块（VB）和 TELs 组成。它们存储在由内存分配器管理的单个大内存映射文件中。数据块通过两个索引数组来访问：节点索引（vertex index）和边索引（edge index）。<br>虽然没有在图中描述，但是在边索引和 TELs 之间还有一个额外的间接层，称为标签索引块（label index blocks），用于分隔每个顶点的带不同标签的边的存储。由于顶点id的增长是连续的，所以我们使用可扩展数组来表示这些索引。在我们的任何实验中，我们都没有发现这是一个限制因素。</p>
+<div align="center" width="80%">
+  <img width="400" src="/img/livegraph/layout.png">
+</div>
+
+<h4 id="顶点块"><a href="#顶点块" class="headerlink" title="顶点块"></a>顶点块</h4><p>LiveGraph 将每个顶点分别存储到顶点块中。对顶点的更新相对较少，事务通常访问最新版本。因此，对于顶点，我们使用一种标准的即写即拷的方法，在这种方法中，可以通过顶点索引找到顶点的最新版本，并且每个版本都指向顶点块中的前一个版本。</p>
+<h4 id="TEL"><a href="#TEL" class="headerlink" title="TEL"></a>TEL</h4><p>一个 TEL 是一个包含预留空间的固定大小的内存数据块，当预留空间被填满，就重新分配一个两倍大小的空间。一个 TEL 的不同版本也是像顶点块一样通过“previous”指针链接。这种组织结合了读取优化格式的分析(如CSR)的高效顺序扫描和对动态数组更新的支持。TEL不只是存储构成当前邻接表的边，而是将所有边的插入、删除和更新作为附加在日志尾部的日志条目表示。</p>
+<p>TEL模块的布局如下图所示。边日志条目被向后追加，从右到左，向前扫描，从左到右。这是因为许多扫描操作受益于时间局部性，比如在 Facebook 的生产工作负载中，往往首先读取最近添加的元素。每个边日志条目具有缓存对齐字段的固定大小。这是我们的事务处理协议所要求的，稍后将对此进行讨论。每个条目都有两个时间戳，一个创建时间戳和一个无效时间戳，表示其生命周期。边属性的长度是可变的，并从块的开始向前追加。这些属性项与边日志项分开存储，以保持后者的数据布局对齐，这也是事务处理所需要的。它们的内容对 LiveGraph 来说是不透明的。</p>
+<div align="center" width="80%">
+  <img width="700" src="/img/livegraph/TEL.png">
+</div>
+
+<p>对于一个新的顶点，它的邻接表开始很小，在我们的实现中只有一条边可以容纳 64Bytes 的块。当一个块已满时，LiveGraph 将日志复制到一个两倍于当前大小的空块。与动态数组类似，附加到日志的平摊代价是常数。最坏情况下的代价是线性的，但是复制连续的内存块是快速的，并且不会导致很高的尾部延迟，正如我们的评估所显示的。</p>
+<p>这种设计特别适合于实际图中常见的幂律度分布。大多数顶点都是低度的、不那么活跃的，它们在一定程度上增长缓慢，空间浪费有限。当升级时，高顶点可能会增长得更快，并产生更高的数据复制成本，但随着块大小呈指数级增长，这种重新定位的频率会降低。幂律度分布也意味着只有一小部分顶点占据大的日志块。我们将在后面详细描述 LiveGraph 的内存管理和日志重定位。</p>
+<h3 id="单线程操作"><a href="#单线程操作" class="headerlink" title="单线程操作"></a>单线程操作</h3><h4 id="节点操作"><a href="#节点操作" class="headerlink" title="节点操作"></a>节点操作</h4><h4 id="顺序邻接表扫描"><a href="#顺序邻接表扫描" class="headerlink" title="顺序邻接表扫描"></a>顺序邻接表扫描</h4><h4 id="边更新和常量时间插入"><a href="#边更新和常量时间插入" class="headerlink" title="边更新和常量时间插入"></a>边更新和常量时间插入</h4><h4 id="读单个边"><a href="#读单个边" class="headerlink" title="读单个边"></a>读单个边</h4><h3 id="事务处理"><a href="#事务处理" class="headerlink" title="事务处理"></a>事务处理</h3><h3 id="存储管理"><a href="#存储管理" class="headerlink" title="存储管理"></a>存储管理</h3><h4 id="Compaction"><a href="#Compaction" class="headerlink" title="Compaction"></a>Compaction</h4><h4 id="时间戳的空间开销"><a href="#时间戳的空间开销" class="headerlink" title="时间戳的空间开销"></a>时间戳的空间开销</h4><h4 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h4><h4 id="恢复机制"><a href="#恢复机制" class="headerlink" title="恢复机制"></a>恢复机制</h4><h3 id="Evaluation"><a href="#Evaluation" class="headerlink" title="Evaluation"></a>Evaluation</h3>
+        
+            <div class="donate-container">
+    <div class="donate-button">
+        <button id="donate-button">赞赏</button>
+    </div>
+    <div class="donate-img-container hide" id="donate-img-container">
+        <img id="donate-img" src="" data-src="/img/donate.jpg">
+        <p> 感谢鼓励 </p>
+    </div>
+</div>
+        
+        <br />
+        <div id="comment-container">
+        </div>
+        <div id="disqus_thread"></div>
+
+        <div id="lv-container">
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+
+<footer class="footer">
+    <ul class="list-inline text-center">
+
+        
+        <li>
+            <a target="_blank"  href="mailto:wangrui1994@126.com">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-linkedin"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+        
+
+        
+        <li>
+            <a target="_blank" href="http://weibo.com/3125304081">
+                            <span class="fa-stack fa-lg">
+                                  <i class="iconfont icon-weibo"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+        
+        <li>
+            <a target="_blank"  href="https://github.com/rwang067">
+                            <span class="fa-stack fa-lg">
+                                <i class="iconfont icon-github"></i>
+                            </span>
+            </a>
+        </li>
+        
+
+        
+
+    </ul>
+    
+    <p>
+        <span>/</span>
+        
+        <span><a href="https://rwang067.github.io/">Rui&#39;s Blog</a></span>
+        <span>/</span>
+        
+        <span><a href="http://home.ustc.edu.cn/~rwang067/">Rui&#39;s Page</a></span>
+        <span>/</span>
+        
+        <span><a href="http://niexiaotao.cn/">AirCloud&#39;s Blog</a></span>
+        <span>/</span>
+        
+    </p>
+    
+    <p>
+        <span id="busuanzi_container_site_pv">
+            <span id="busuanzi_value_site_pv"></span>PV
+        </span>
+        <span id="busuanzi_container_site_uv">
+            <span id="busuanzi_value_site_uv"></span>UV
+        </span>
+        Created By <a href="https://hexo.io/">Hexo</a>  Theme <a href="https://github.com/aircloud/hexo-theme-aircloud">AirCloud</a></p>
+</footer>
+
+
+
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<!-- <script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+</body>
+
+<script>
+    // We expose some of the variables needed by the front end
+    window.hexo_search_path = "search.json"
+    window.hexo_root = "/"
+    window.isPost = true
+</script>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script src="/js/index.js"></script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<script src="/js/gitment.js"></script>
+<script>
+    var gitment = new Gitment({
+        id: 'LiveGraph(PVLDB 2020) 事务性图存储系统',
+        owner: 'rwang067',
+        repo: 'rwang067.github.io',
+        oauth: {
+            client_id: '366668f038aaa3679510',
+            client_secret: 'c30b890b606327a4b145e1b0c801698ec724460e',
+        },
+    })
+    gitment.render('comment-container')
+</script>
+
+
+
+
+</html>
