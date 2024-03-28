@@ -4,7 +4,7 @@ collection: publications
 permalink: /publication/2022-02-17-XPGraph-number-4
 excerpt: 'This paper is about dynamic graph stores on persistent memory.'
 date: 2022-10-05
-venue: 'MICRO 2022'
+venue: 'MICRO'
 paperurl: 'https://ieeexplore.ieee.org/abstract/document/9923828'
 citation: 'Rui Wang, Shuibing He, Weixu Zong, Yongkun Li, and Yinlong Xu. "XPGraph: XPline-friendly persistent memory graph stores for large-scale evolving graphs." In 2022 55th IEEE/ACM International Symposium on Microarchitecture (MICRO), pp. 1308-1325. IEEE, 2022.'
 ---

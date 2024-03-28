@@ -8,9 +8,9 @@
 
 # Basic Site Settings
 locale                   : "en-US"
-title                    : "Rui Wang / Site Title"
+title                    : "Rui Wang's Homepage"
 title_separator          : "-"
-name                     : &name "Rui Wang (汪睿)"
+name                     : &name "Rui Wang"
 description              : &description "ZJU100 Research Fellow"
 url                      : https://rwang067.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
@@ -21,12 +21,12 @@ repository               : "rwang067/rwang067.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "avatai.jpg"
-  name             : "Rui Wang"
+  avatar           : "avatai.png"
+  name             : "Rui Wang (汪睿)"
   pronouns         : # example: "she/her"  
   bio              : "ZJU100 Research Fellow"
   location         : # "Earth"
-  # employer         : "Red Brick University"
+  employer         : "Zhejiang University"
   uri              : # URL
   email            : "rwang21@zju.edu.cn" 
 
