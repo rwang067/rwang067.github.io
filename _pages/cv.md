@@ -11,18 +11,23 @@ redirect_from:
 
 Education
 ======
-* Ph.D in Version Control Theory, GitHub University, 2018 (expected)
-* M.S. in Jekyll, GitHub University, 2014
-* B.S. in GitHub, GitHub University, 2012
+* Ph.D in Computer System Architecture, University of Science and Technology of China (USTC), 2016.09 to 2021.06
+<!-- * M.S. in Jekyll, GitHub University, 2014 -->
+* B.S. in Computer Science and Technology, Donghua University (DHU), 2012.09 to 2016.06
 
 Work experience
 ======
-* Spring 2024: Academic Pages Collaborator
-  * Github University
-  * Duties includes: Updates and improvements to template
-  * Supervisor: The Users
+* 2023.08 to Present: ZJU100 Research Fellow
+  * Zhejiang University
+  * College of Software
 
-* Fall 2015: Research Assistant
+* 2021.07 to 2023.07: Postdoc
+  * Zhejiang University
+  * College of Computer Science and Technology
+  <!-- , Computer System Architecture -->
+  <!-- * Supervisor: The Users -->
+
+<!-- * Fall 2015: Research Assistant
   * Github University
   * Duties included: Merging pull requests
   * Supervisor: Professor Hub
@@ -30,9 +35,9 @@ Work experience
 * Summer 2015: Research Assistant
   * Github University
   * Duties included: Tagging issues
-  * Supervisor: Professor Git
+  * Supervisor: Professor Git -->
   
-Skills
+<!-- Skills
 ======
 * Skill 1
 * Skill 2
@@ -61,4 +66,4 @@ Teaching
   
 Service and leadership
 ======
-* Currently signed in to 43 different slack teams
+* Currently signed in to 43 different slack teams -->

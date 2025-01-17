@@ -21,7 +21,7 @@ repository               : "rwang067/rwang067.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "avatai.png"
+  avatar           : "avatar.png"
   name             : "Rui Wang (汪睿)"
   pronouns         : # example: "she/her"  
   bio              : "ZJU100 Research Fellow"

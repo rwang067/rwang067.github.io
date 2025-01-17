@@ -2,7 +2,7 @@
 title: "GraphWalker: An I/O-Efficient and Resource-Friendly Graph Analytic System for Fast and Scalable Random Walks."
 collection: publications
 permalink: /publication/2020-07-17-GraphWalker-number-3
-excerpt: 'This paper is about an I/O-efficient out-of-cure graph system for random walks.'
+excerpt: 'This paper is about an I/O-efficient out-of-core graph system for random walks.'
 date: 2020-7-17
 venue: 'ATC'
 paperurl: 'https://www.usenix.org/conference/atc20/presentation/wang-rui'
