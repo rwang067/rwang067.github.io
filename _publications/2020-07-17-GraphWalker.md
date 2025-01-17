@@ -1,10 +1,10 @@
 ---
 title: "GraphWalker: An I/O-Efficient and Resource-Friendly Graph Analytic System for Fast and Scalable Random Walks."
 collection: publications
-permalink: /publication/2020-07-17-GraphWalker-number-3
+permalink: /publication/2020-07-17-GraphWalker
 excerpt: 'This paper is about an I/O-efficient out-of-core graph system for random walks.'
 date: 2020-7-17
-venue: 'ATC'
+venue: 'USENIX ATC'
 paperurl: 'https://www.usenix.org/conference/atc20/presentation/wang-rui'
 citation: 'Rui Wang, Yongkun Li, Hong Xie, Yinlong Xu, and John CS Lui. "GraphWalker: An I/O-Efficient and Resource-Friendly Graph Analytic System for Fast and Scalable Random Walks." In 2020 USENIX Annual Technical Conference (USENIX ATC 20), pp. 559-571. 2020.'
 ---
