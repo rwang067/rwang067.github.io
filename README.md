@@ -44,9 +44,9 @@ Unfortunately, one logistical issue with a template theme like Academic Pages th
 
 
 
-// Add in 20250117
+## Add in 20250117
 
-## Help
+### Help
 
 [https://jekylldo.cn/docs/installation/macos/]
 [https://www.wenew.uk/2024/02/25/Mac-系统上安装-Jekyll/]
@@ -77,7 +77,7 @@ rm -rf /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core
 brew update -->
 
 添加ruby路径到环境变量
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH" （重启电脑后执行这步就可以）
 <!-- echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc -->
 
@@ -92,7 +92,7 @@ ruby -v
 sudo gem install --user-install bundler jekyll
 (提示: WARNING:  You don't have /Users/rui/.gem/ruby/3.4.0/bin in your PATH)
 
-export PATH="/Users/rui/.gem/ruby/3.4.0/bin:$PATH
+export PATH="/Users/rui/.gem/ruby/3.4.0/bin:$PATH"
 <!-- echo 'export PATH="/Users/rui/.gem/ruby/3.4.0/bin:$PATH"' >> ~/.zshrc
 source ~/.zshrc -->
 
@@ -110,3 +110,35 @@ bundle install
 bundle exec jekyll serve
 
 访问 `localhost:4000` 
+
+
+## Add in 20250522
+
+### 1.  确定 ruby 版本
+
+添加ruby路径到环境变量
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH" （重启电脑后执行这步就可以）
+<!-- echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc -->
+
+which ruby 
+(/opt/homebrew/opt/ruby/bin/ruby)
+ruby -v
+(终于显示ruby 3.4.1 (2024-12-25 revision 48d4efcb85) +PRISM [arm64-darwin23])
+
+### 2.  确定 Jekyll 和依赖
+
+export PATH="/Users/rui/.gem/ruby/3.4.0/bin:$PATH" （重启电脑后执行这步就可以）
+
+### 3.通过bundle运行jekyll
+jekyll -v
+
+/Users/rui/.gem/ruby/3.4.0/gems/bundler-2.6.3/lib/bundler/runtime.rb:319:in 'Bundler::Runtime#check_for_activated_spec!': You have already activated public_suffix 6.0.1, but your Gemfile requires public_suffix 5.1.1. Prepending `bundle exec` to your command may solve this. (Gem::LoadError)
+
+bundle exec jekyll serve
+
+访问 `localhost:4000` 
+
+编辑页面
+
+// 同步到 GitHub Page
