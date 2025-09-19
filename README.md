@@ -142,3 +142,5 @@ bundle exec jekyll serve
 编辑页面
 
 // 同步到 GitHub Page
+git add .
+git commit -m "add publications in 2025"
