@@ -73,8 +73,10 @@ Students
 
 Teaching
 ======
-* 2024 winter, Advanced Distributed System
-* 2024 winter, Introduction to Artificial Intelligence Chips
+* Advanced Distributed System
+* Introduction to Artificial Intelligence Chips
+<!-- * 2024 winter, Advanced Distributed System
+* 2024 winter, Introduction to Artificial Intelligence Chips -->
   
 <!-- 
 Teaching
